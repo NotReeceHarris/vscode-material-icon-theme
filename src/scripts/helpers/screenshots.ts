@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { join } from 'node:path';
 import Puppeteer from 'puppeteer';
 
 /**
@@ -7,9 +7,13 @@ import Puppeteer from 'puppeteer';
  * @param fileName Name of the output image
  */
 export const createScreenshot = async (filePath: string, fileName: string) => {
+  const browser = await Puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
+  const htmlFilePath = join('file:', filePath);
+
   try {
-    const htmlFilePath = join('file:', filePath);
-    const browser = await Puppeteer.launch();
     const page = await browser.newPage();
     await page.setViewport({
       height: 10,
@@ -28,5 +32,9 @@ export const createScreenshot = async (filePath: string, fileName: string) => {
   } catch (error) {
     console.error(error);
     throw Error('Could not create screenshot for a preview');
+  } finally {
+    const pages = await browser.pages();
+
+    for (const page of pages) await page.close();
   }
 };
